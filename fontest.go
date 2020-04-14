@@ -27,7 +27,10 @@ import (
 
 var nlreg = regexp.MustCompile(`\r\n|\r|\n`)
 
-const csvFileNameTimeFormat = "2006-01-02_150405.csv"
+const (
+	csvFileNameTimeFormat = "2006-01-02_150405.csv"
+	basePath              = "_output"
+)
 
 // Run the fontest
 func Run(ctx context.Context, argv []string, outStream, errStream io.Writer) error {
@@ -98,6 +101,7 @@ func Run(ctx context.Context, argv []string, outStream, errStream io.Writer) err
 		}
 	}
 
+	_ = os.Mkdir(basePath, os.ModePerm)
 	for _, fontFile := range fs.Args() {
 		fontName := getFontName(fontFile)
 		ttf, err := loadFont(fontFile)
@@ -155,9 +159,11 @@ func saveImage(ttf *truetype.Font, title string, lines []string) error {
 	if err := png.Encode(buf, rgba); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile("__"+title+".png", buf.Bytes(), os.ModePerm); err != nil {
+	name := filepath.Join(basePath, "__"+title+".png")
+	if err := ioutil.WriteFile(name, buf.Bytes(), os.ModePerm); err != nil {
 		return err
 	}
+	fmt.Println(name)
 	return nil
 }
 
@@ -166,9 +172,11 @@ func saveResult(records [][]string) error {
 	if err := csv.NewWriter(buf).WriteAll(records); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(time.Now().Format(csvFileNameTimeFormat), buf.Bytes(), os.ModePerm); err != nil {
+	name := filepath.Join(basePath, time.Now().Format(csvFileNameTimeFormat))
+	if err := ioutil.WriteFile(name, buf.Bytes(), os.ModePerm); err != nil {
 		return err
 	}
+	fmt.Println(name)
 	return nil
 }
 
